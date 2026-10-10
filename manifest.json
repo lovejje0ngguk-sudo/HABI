@@ -1,0 +1,11 @@
+
+{
+  "name": "HABI",
+  "short_name": "HABI",
+  "description": "Explore. Experience. Give Back.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#174c3c"
+}
