@@ -545,56 +545,229 @@ if ("serviceWorker" in navigator) {
 }
 </script>
 
-<!-- HABI AI ASSISTANT -->
-<section id="ai" class="section" style="padding: 24px 16px;">
-  <div style="max-width: 700px; margin: auto;">
-    <h2>🧵 HABI AI Concierge</h2>
-    <p>
-      Your local guide to San Jose del Monte.
-      Ask about destinations, nature, and trip planning!
-    </p>
 
-    <div id="habiChat"
-      style="height: 280px; overflow-y: auto; padding: 14px;
-      border: 1px solid #d4ded8; border-radius: 12px;
-      margin: 16px 0; background: #f7faf8;">
-      <p><strong>HABI:</strong> Hello! 🌿 I can help you explore
-      San Jose del Monte. Try asking about Grotto, Mount Balagbag,
-      or planning a trip.</p>
+<!-- HABI AI FLOATING CHAT -->
+<style>
+  #habiFloatButton {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9999;
+    background: #174c3c;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 14px #0003;
+  }
+
+  #habiFloatPanel {
+    display: none;
+    position: fixed;
+    right: 20px;
+    bottom: 82px;
+    width: 350px;
+    max-width: calc(100vw - 32px);
+    height: 440px;
+    max-height: calc(100vh - 120px);
+    z-index: 9998;
+    background: #fff;
+    border: 1px solid #d4ded8;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px #0003;
+    overflow: hidden;
+    color: #26352c;
+  }
+
+  #habiFloatHeader {
+    background: #174c3c;
+    color: white;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #habiFloatMessages {
+    height: 220px;
+    overflow-y: auto;
+    padding: 12px;
+    background: #f7faf8;
+    font-size: 14px;
+  }
+
+  #habiFloatPanel textarea {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid #b9c9bf;
+    border-radius: 8px;
+    font: inherit;
+  }
+
+  #habiFloatPanel button {
+    cursor: pointer;
+  }
+
+  #habiFloatPanel .habiAction {
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: #174c3c;
+    color: white;
+  }
+
+  @media (max-width: 480px) {
+    #habiFloatButton {
+      right: 12px;
+      bottom: 14px;
+    }
+
+    #habiFloatPanel {
+      right: 8px;
+      bottom: 75px;
+      width: calc(100vw - 16px);
+      max-width: none;
+      height: min(440px, calc(100dvh - 100px));
+    }
+  }
+</style>
+
+<div id="habiFloatPanel" role="dialog"
+     aria-label="HABI AI Concierge">
+  <div id="habiFloatHeader">
+    <div>
+      <strong>🌿 HABI AI Concierge</strong><br>
+      <small>Your local guide to SJDM</small>
     </div>
-
-    <label for="habiQuestion"><strong>Your question</strong></label>
-    <textarea id="habiQuestion"
-      placeholder="Ask HABI something..."
-      rows="3"
-      style="width: 100%; box-sizing: border-box; padding: 12px;
-      border: 1px solid #b9c9bf; border-radius: 10px;
-      margin-top: 8px;"></textarea>
-
-
-    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-      <button type="button" onclick="habiAsk()"
-        style="background:#174c3c;color:white;border:0;
-        padding:12px 18px;border-radius:9px;">
-        Send
-      </button>
-      <button type="button" onclick="habiVoice()"
-        style="padding:12px 16px;border-radius:9px;">
-        🎤 Speak
-      </button>
-      <button type="button" onclick="habiRead()"
-        style="padding:12px 16px;border-radius:9px;">
-        🔊 Read reply
-      </button>
-    </div>
-
-    <p style="font-size: 12px; color: #68776e; margin-top: 14px;">
-      Prototype notice: replies currently use built-in tourism information,
-      not a connected generative AI service. Voice support depends on your browser.
-    </p>
+    <button type="button" onclick="habiToggleChat()"
+            aria-label="Close chat"
+            style="background:transparent;color:white;border:0;font-size:24px;">
+      ×
+    </button>
   </div>
-</section>
-<!-- END HABI AI ASSISTANT -->
+
+  <div id="habiFloatMessages" aria-live="polite">
+    <p><strong>HABI:</strong> Hello! 🌿 Ask me about destinations,
+    nature, local attractions, or planning a trip around San Jose del Monte.</p>
+  </div>
+
+  <div style="padding:12px;">
+    <label for="habiFloatQuestion"><strong>Your question</strong></label>
+    <textarea id="habiFloatQuestion" rows="2"
+              placeholder="Ask HABI something..."></textarea>
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+      <button class="habiAction" type="button"
+              onclick="habiFloatAsk()">Send</button>
+      <button class="habiAction" type="button"
+              onclick="habiFloatVoice()">🎤 Speak</button>
+      <button class="habiAction" type="button"
+              onclick="habiFloatRead()">🔊 Read</button>
+    </div>
+  </div>
+</div>
+
+<button id="habiFloatButton" type="button"
+        onclick="habiToggleChat()"
+        aria-expanded="false">
+  💬 Chat with HABI
+</button>
+
+<script>
+  function habiToggleChat() {
+    const panel = document.getElementById("habiFloatPanel");
+    const button = document.getElementById("habiFloatButton");
+    const isOpen = panel.style.display === "block";
+
+    panel.style.display = isOpen ? "none" : "block";
+    button.setAttribute("aria-expanded", String(!isOpen));
+
+    if (!isOpen) {
+      document.getElementById("habiFloatQuestion").focus();
+    }
+  }
+function habiFloatAsk() {
+  const input = document.getElementById("habiFloatQuestion");
+  const messages = document.getElementById("habiFloatMessages");
+  const question = input.value.trim();
+
+  if (!question) {
+    input.focus();
+    return;
+  }
+
+  const userMessage = document.createElement("p");
+  userMessage.textContent = "You: " + question;
+  messages.appendChild(userMessage);
+
+  const q = question.toLowerCase();
+  let answer;
+
+  if (q.includes("grotto")) {
+    answer = "The Grotto of Our Lady of Lourdes is a well-known religious destination in San Jose del Monte. Please respect the site and its visitors.";
+  } else if (q.includes("balagbag") || q.includes("mountain")) {
+    answer = "Mount Balagbag is known for outdoor activities and scenic views. Check local access and weather before visiting.";
+  } else if (q.includes("itinerary") || q.includes("trip") || q.includes("plan")) {
+    answer = "Suggested day trip: Visit a local attraction in the morning, enjoy lunch at a local business, then explore another destination in the afternoon.";
+  } else if (q.includes("food") || q.includes("restaurant")) {
+    answer = "Discover local eateries in San Jose del Monte and support local businesses. Check their current menus and operating hours before going.";
+  } else if (q.includes("sustainable") || q.includes("environment") || q.includes("trash")) {
+    answer = "Travel responsibly: bring a reusable bottle, dispose of waste properly, respect nature, and support local communities.";
+  } else if (q.includes("hello") || q.includes("hi") || q.includes("kumusta")) {
+    answer = "Hello! Welcome to HABI! Ask me about SJDM destinations, local food, trip planning, or sustainable tourism.";
+  } else {
+    answer = "I'm still learning! Try asking about Grotto, Mount Balagbag, local food, trip planning, or sustainable tourism.";
+  }
+
+  const reply = document.createElement("p");
+  reply.textContent = "HABI: " + answer;
+  messages.appendChild(reply);
+
+  input.value = "";
+  messages.scrollTop = messages.scrollHeight;
+}
+
+  function habiFloatVoice() {
+  const Recognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!Recognition) {
+    alert("Voice input is not supported in this browser. Try Chrome.");
+    return;
+  }
+
+  const input = document.getElementById("habiFloatQuestion");
+  const recognition = new Recognition();
+
+  recognition.lang = "en-PH";
+
+  recognition.onresult = function(event) {
+    input.value = event.results[0][0].transcript;
+    input.focus();
+  };
+
+  recognition.onerror = function(event) {
+    alert("Voice input failed: " + event.error +
+      ". Check your microphone permission.");
+  };
+
+  recognition.start();
+}
+  function habiFloatRead() {
+    if (typeof habiRead === "function") {
+      habiRead();
+    } else {
+      alert("Read-aloud is not available.");
+    }
+  }
+</script>
+<!-- END HABI AI FLOATING CHAT -->
+
 
 <script>
 function habiAsk() {
